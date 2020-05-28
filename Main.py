@@ -264,15 +264,15 @@ squares = infer_grid(cropped)
 digits = get_digits(cropped, squares, 28)
 
 dig = show_digits(digits)
-show_image(dig)
+# show_image(dig)
 
-display_rects(cropped, squares)
+# display_rects(cropped, squares)
 
-show_image(cropped)
+# show_image(cropped)
 
-display_points(processed, corners)
+# display_points(processed, corners)
 
-show_image(processed)
+# show_image(processed)
 
 
 #find the countours in image
@@ -287,7 +287,7 @@ processed = cv2.cvtColor(processed, cv2.COLOR_GRAY2BGR)
 
 all_contours = cv2.drawContours(processed.copy(), contours, -1, (255,0,0), 2)
 external_only = cv2.drawContours(processed.copy(), ext_contours, -1, (255, 0, 0), 2)
-plot_many_images([all_contours, external_only], ['All Contours', 'External Only'])
+# plot_many_images([all_contours, external_only], ['All Contours', 'External Only'])
 
 
 
@@ -296,9 +296,74 @@ ret, threshold1 = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
 
 #binary adaptive threshold using 11 nearest neighbor pixels
 threshold2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
+# plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
 
+import tensorflow as tf
+import pickle
+import os
 
+x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784])  # Placeholder for input
+y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 10])  # Placeholder for true labels (used in training)
+hidden_neurons = 16  # Number of neurons in the hidden layer, constant
+
+def weights(shape):
+	"""Weight initialisation with a random, slightly positive value to help prevent dead neurons."""
+	return tf.Variable(tf.random_normal(shape, stddev=0.1))
+def biases(shape):
+	"""Bias initialisation with a positive constant, helps to prevent dead neurons."""
+	return tf.Variable(tf.constant(0.1, shape=shape))
+
+# Hidden layer
+w_1 = weights([784, hidden_neurons])
+b_1 = biases([hidden_neurons])
+h_1 = tf.nn.sigmoid(tf.matmul(x, w_1) + b_1)  # Order of x and w_1 matters here purely syntactically
+
+# Output layer
+w_2 = weights([hidden_neurons, 10])
+b_2 = biases([10])
+y = tf.matmul(h_1, w_2) + b_2  # Note that we don't use sigmoid here because the next step uses softmax
+
+# Cross entropy cost function
+# More numerically stable to perform Softmax here instead of on the previous layer
+# c.f. https://www.tensorflow.org/get_started/mnist/beginners
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+
+# Gradient descent and backpropagation learning
+train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cost)
+
+# Accuracy comparison/measurement function
+correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+def load_data(file_name):
+	"""Loads Python object from disk."""
+	with open(file_name, 'rb') as f:
+		data = pickle.load(f)
+	return data
+
+# Train the network
+ds = load_data(os.path.join('data', 'digit-basic'))  # Dataset
+saver = tf.train.Saver()  # Initialise a model saver
+
+with tf.Session() as sess:  # Start the TensorFlow session
+    tf.global_variables_initializer().run()
+
+    try:  # Attempt to load a saved model if it exists
+        saver.restore(sess, model_path)
+    except:
+        print('Could not load model from %s.' % model_path)
+
+    for i in range(500):
+        batch = ds.train.next_batch(100)  # Grab 100 images from the training set
+        sess.run(train_step, feed_dict={x: batch[0], y_: batch[1]})  # Batch is a tuple with images and labels
+        if i % 100 == 0:  # Every 100 steps, show the training accuracy
+            train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1]})
+            print('Step: %s' % i)
+            print('Training Accuracy: %s' % train_accuracy)
+
+    # Show the test accuracy at the end
+    print('\nTest accuracy: %s' % accuracy.eval(feed_dict={x: ds.test.images, y_: ds.test.labels}))
+    saver.save(sess, model_path)  # Save the model
 
 
 print(type(img))
