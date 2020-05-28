@@ -264,6 +264,10 @@ squares = infer_grid(cropped)
 digits = get_digits(cropped, squares, 28)
 
 dig = show_digits(digits)
+
+print(type(dig))
+print(type(digits))
+print((dig[2]).size)
 # show_image(dig)
 
 # display_rects(cropped, squares)
@@ -299,71 +303,40 @@ threshold2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2
 # plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
 
 import tensorflow as tf
-import pickle
-import os
+from tensorflow import keras
+from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
+from keras.utils import np_utils
+import numpy as np
+import matplotlib.pyplot as plt
 
-x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784])  # Placeholder for input
-y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 10])  # Placeholder for true labels (used in training)
-hidden_neurons = 16  # Number of neurons in the hidden layer, constant
+dset = keras.datasets.mnist
+(train_images, train_labels), (test_images, test_labels) = dset.load_data()
+alldata = dset.load_data()
 
-def weights(shape):
-	"""Weight initialisation with a random, slightly positive value to help prevent dead neurons."""
-	return tf.Variable(tf.random_normal(shape, stddev=0.1))
-def biases(shape):
-	"""Bias initialisation with a positive constant, helps to prevent dead neurons."""
-	return tf.Variable(tf.constant(0.1, shape=shape))
+# Categorize labels (not mandatory for our first simple network)
+train_labels_cat = np_utils.to_categorical(train_labels, 10)
+test_labels_cat = np_utils.to_categorical(test_labels, 10)
 
-# Hidden layer
-w_1 = weights([784, hidden_neurons])
-b_1 = biases([hidden_neurons])
-h_1 = tf.nn.sigmoid(tf.matmul(x, w_1) + b_1)  # Order of x and w_1 matters here purely syntactically
+# Preprocess image data
+test_images_orig = test_images
+train_images = train_images / 255
+test_images = test_images / 255
 
-# Output layer
-w_2 = weights([hidden_neurons, 10])
-b_2 = biases([10])
-y = tf.matmul(h_1, w_2) + b_2  # Note that we don't use sigmoid here because the next step uses softmax
+model = keras.Sequential()
+model.add(Flatten(input_shape=(28, 28)))
+model.add(Dense(128, activation=tf.nn.relu))
+model.add(Dense(10, activation=tf.nn.softmax))
 
-# Cross entropy cost function
-# More numerically stable to perform Softmax here instead of on the previous layer
-# c.f. https://www.tensorflow.org/get_started/mnist/beginners
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
 
-# Gradient descent and backpropagation learning
-train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cost)
+model.fit(train_images, train_labels_cat, epochs=10)
 
-# Accuracy comparison/measurement function
-correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
+print(test_loss,test_acc)
 
-def load_data(file_name):
-	"""Loads Python object from disk."""
-	with open(file_name, 'rb') as f:
-		data = pickle.load(f)
-	return data
-
-# Train the network
-ds = load_data(os.path.join('data', 'digit-basic'))  # Dataset
-saver = tf.train.Saver()  # Initialise a model saver
-
-with tf.Session() as sess:  # Start the TensorFlow session
-    tf.global_variables_initializer().run()
-
-    try:  # Attempt to load a saved model if it exists
-        saver.restore(sess, model_path)
-    except:
-        print('Could not load model from %s.' % model_path)
-
-    for i in range(500):
-        batch = ds.train.next_batch(100)  # Grab 100 images from the training set
-        sess.run(train_step, feed_dict={x: batch[0], y_: batch[1]})  # Batch is a tuple with images and labels
-        if i % 100 == 0:  # Every 100 steps, show the training accuracy
-            train_accuracy = accuracy.eval(feed_dict={x: batch[0], y_: batch[1]})
-            print('Step: %s' % i)
-            print('Training Accuracy: %s' % train_accuracy)
-
-    # Show the test accuracy at the end
-    print('\nTest accuracy: %s' % accuracy.eval(feed_dict={x: ds.test.images, y_: ds.test.labels}))
-    saver.save(sess, model_path)  # Save the model
+predictions = model.predict
 
 
 print(type(img))
