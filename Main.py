@@ -384,20 +384,18 @@ model.compile(loss='categorical_crossentropy',
 
 model.fit(train_images, train_labels_cat, epochs=10)
                   # Calculate prediction for test data
-predictions = model.predict(ds.test.images)
+varia = resize(ds.test.images.copy(), 28, 28)
+predictions = model.predict(varia)
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 # print(test_loss,test_acc)
 
 print(predictions)
-    
 
 
 
-print(type(img))
-print(img.shape)
-print(img)
 
+##m
 
 stop
 
