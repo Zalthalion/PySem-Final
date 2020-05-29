@@ -255,7 +255,7 @@ def show_digits(digits, colour=255):
         rows.append(row)
     return (np.concatenate(rows, axis=1))
 
-PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/image1.jpg'
+PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/sudoku-puzzle1.jpg'
 img = cv2.imread(PICTURE_PATH, cv2.IMREAD_GRAYSCALE)
 processed = pre_process_image(img)
 corners = find_corners_of_largest_polygon(processed)
@@ -373,7 +373,7 @@ test_images = test_images / 255
 
 
 model = keras.Sequential()
-
+model.add(Flatten(input_shape=(28, 28)))
 model.add(Dense(128, activation=tf.nn.relu))
 model.add(Dense(10, activation=tf.nn.softmax))
 
@@ -381,10 +381,17 @@ model.add(Dense(10, activation=tf.nn.softmax))
 model.compile(loss='categorical_crossentropy',
     optimizer='adam',
     metrics=['accuracy'])
+ds.train.images = np.reshape(ds.train.images, (-1,28,28))
+model.fit(ds.train.images, ds.train.labels, epochs=10)
 
-model.fit(train_images, train_labels_cat, epochs=10)
-                  # Calculate prediction for test data
-predictions = model.predict(ds.test.images)
+resize = np.reshape(digits,(-1,28,28))                  # Calculate prediction for test data
+num = 0                  
+predictions = model.predict(resize)
+for x in range(9):
+    for y in range(9):
+        print(np.argmax(predictions[num]))
+        num+=1
+    print("newline")
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 # print(test_loss,test_acc)
