@@ -262,9 +262,10 @@ corners = find_corners_of_largest_polygon(processed)
 cropped = crop_and_warp(img, corners)
 squares = infer_grid(cropped)
 digits = get_digits(cropped, squares, 28)
-
+# for digit in digits:
+#     print((digit).shape)
 dig = show_digits(digits)
-# show_image(dig)
+
 
 # display_rects(cropped, squares)
 
@@ -373,26 +374,52 @@ test_images = test_images / 255
 
 
 model = keras.Sequential()
-
+model.add(Flatten(input_shape=(28, 28)))
 model.add(Dense(128, activation=tf.nn.relu))
 model.add(Dense(10, activation=tf.nn.softmax))
+
+
 
 
 model.compile(loss='categorical_crossentropy',
     optimizer='adam',
     metrics=['accuracy'])
+# digis = dig.copy()
+# #np.reshape(digis,(28,28))
+# print((digis).shape)
+
 
 model.fit(train_images, train_labels_cat, epochs=10)
+test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
+print(test_loss,test_acc)
+
+
+# print("i hope this got here")
+# print("i hope this got here")
+# print("i hope this got here")
+# print("i hope this got here")
+# print("i hope this got here")
                   # Calculate prediction for test data
-varia = resize(ds.test.images.copy(), 28, 28)
-predictions = model.predict(varia)
+#varia = resize(ds.test.images.copy(), 28, 28)
+
+reshaped = np.reshape(digits,[-1,28,28])
+predictions = model.predict(reshaped)
+
+ini = 0
+for x in range(9):
+    for y in range(9):
+        print(np.argmax(predictions[ini]))
+        ini+=1
+    print("newline")
+
+
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 # print(test_loss,test_acc)
 
-print(predictions)
+#print(predictions)
 
-
+plt.imshow(dig)
 
 
 ##m
