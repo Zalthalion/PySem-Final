@@ -7,6 +7,15 @@ import numpy as np
 #pip install matplotlib
 from matplotlib import pyplot as plt
 import operator
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
+from keras.utils import np_utils
+import tensorflow as tf
+import pickle
+import os
+import numpy as np
+import matplotlib.pyplot as plt
 
 def plot_many_images(images, titles, rows=1, columns=2):
 	"""Plots each image in a given list in a grid format using Matplotlib."""
@@ -263,20 +272,20 @@ cropped = crop_and_warp(img, corners)
 squares = infer_grid(cropped)
 digits = get_digits(cropped, squares, 28)
 # for digit in digits:
-#     print((digit).shape)
 dig = show_digits(digits)
+show_image(dig)
 
 
-# display_rects(cropped, squares)
+display_rects(cropped, squares)
 
-# show_image(cropped)
+show_image(cropped)
 
-# display_points(processed, corners)
+display_points(processed, corners)
 
-# show_image(processed)
+show_image(processed)
 
 
-#find the countours in image
+# find the countours in image
 
 
 ext_contours,new_img  = cv2.findContours(processed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -288,7 +297,7 @@ processed = cv2.cvtColor(processed, cv2.COLOR_GRAY2BGR)
 
 all_contours = cv2.drawContours(processed.copy(), contours, -1, (255,0,0), 2)
 external_only = cv2.drawContours(processed.copy(), ext_contours, -1, (255, 0, 0), 2)
-# plot_many_images([all_contours, external_only], ['All Contours', 'External Only'])
+plot_many_images([all_contours, external_only], ['All Contours', 'External Only'])
 
 
 
@@ -297,11 +306,8 @@ ret, threshold1 = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
 
 #binary adaptive threshold using 11 nearest neighbor pixels
 threshold2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-# plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
+plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
 
-import tensorflow as tf
-import pickle
-import os
 tf.compat.v1.disable_eager_execution()
 x = tf.compat.v1.placeholder(tf.float32, shape=[0, 784])  # Placeholder for input
 y_ = tf.compat.v1.placeholder(tf.float32, shape=[0, 10])  # Placeholder for true labels (used in training)
@@ -346,22 +352,14 @@ def load_data(file_name):
 model_path = 'D:/Code/PySem-FInal/PySem-Final/'
 ds = load_data(os.path.join('D:/Code/PySem-FInal/PySem-Final/neural_net', 'digit-basic'))  # Dataset
 # TensorFlow and tf.keras
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
-from keras.utils import np_utils
+
 # Helper libraries
-import numpy as np
-import matplotlib.pyplot as plt
+
 # Import MNIST dataset split into 60,000 for training and 10,000 for testing
 dset = keras.datasets.mnist
 (train_images, train_labels), (test_images, test_labels) = dset.load_data()
 # Insight into imported data
 num = 0
-# plt.imshow(train_images[num])
-# for n in range(5):
-#   plt.imshow(train_images[n])
-#   print(train_labels[n])
 
 # Categorize labels (not mandatory for our first simple network)
 train_labels_cat = np_utils.to_categorical(train_labels, 10)
@@ -378,48 +376,63 @@ model.add(Flatten(input_shape=(28, 28)))
 model.add(Dense(128, activation=tf.nn.relu))
 model.add(Dense(10, activation=tf.nn.softmax))
 
-
-
-
 model.compile(loss='categorical_crossentropy',
     optimizer='adam',
     metrics=['accuracy'])
-# digis = dig.copy()
-# #np.reshape(digis,(28,28))
-# print((digis).shape)
 
-
-model.fit(train_images, train_labels_cat, epochs=10)
+model.fit(train_images, train_labels_cat, epochs=20)
 test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 print(test_loss,test_acc)
-
-
-# print("i hope this got here")
-# print("i hope this got here")
-# print("i hope this got here")
-# print("i hope this got here")
-# print("i hope this got here")
-                  # Calculate prediction for test data
-#varia = resize(ds.test.images.copy(), 28, 28)
 
 reshaped = np.reshape(digits,[-1,28,28])
 predictions = model.predict(reshaped)
 
+
+puzzleArray = [[],[],[],[],[],[],[],[],[]]
+
 ini = 0
 for x in range(9):
     for y in range(9):
-        print(np.argmax(predictions[ini]))
-        ini+=1
-    print("newline")
+        if max(predictions[ini]) < 0.6:
+            puzzleArray[y].append(0)
+            ini+=1
+        else:
+            puzzleArray[y].append(np.argmax(predictions[ini]))
+            ini+=1
+puzzleString = ""
+for col in range(9):
+    if col == 3 or col == 6:
+        puzzleString += "------+------+------\n"
+      
+    for row in range(9):
+        if row == 3 or row ==6:
+            puzzleString += "|"
+            
+        puzzleString += (str)(puzzleArray[col][row])
+        puzzleString += " "
+    puzzleString += '\n'
 
-
+print(puzzleString)
+gridTest = """
+8 . . |. . . |. . . 
+. . 3 |6 . . |. . . 
+. 7 . |. 9 . |2 . . 
+------+------+------
+. 5 . |. . 7 |. . . 
+. . . |. 4 5 |7 . . 
+. . . |1 . . |. 3 . 
+------+------+------
+. . 1 |. . . |. 6 8 
+. . 8 |5 . . |. 1 . 
+. 9 . |. . . |4 . . 
+"""
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 # print(test_loss,test_acc)
 
 #print(predictions)
 
-plt.imshow(dig)
+
 
 
 ##m
