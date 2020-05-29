@@ -1,30 +1,12 @@
-# pip install opencv-python
-from cv2 import cv2
-# pip install keras
-# pip install sckit-learn
-# pip imstall numpy
-import numpy as np
-#pip install matplotlib
-from matplotlib import pyplot as plt
+from cv2 import cv2     #pip install opencv-python      
+import numpy as np      #pip install numpy
+from matplotlib import pyplot as plt    #pip install matplotlib
 import operator
-import tensorflow as tf
+import tensorflow as tf     #pip install tensorflow
 from tensorflow import keras
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
-from keras.utils import np_utils
-import tensorflow as tf
-import pickle
+from keras.utils import np_utils    #pip install keras
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-
-def plot_many_images(images, titles, rows=1, columns=2):
-	"""Plots each image in a given list in a grid format using Matplotlib."""
-	for i, image in enumerate(images):
-		plt.subplot(rows, columns, i+1)
-		plt.imshow(image, 'gray')
-		plt.title(titles[i])
-		plt.xticks([]), plt.yticks([])  # Hide tick marks
-	plt.show()
 
 def pre_process_image(img, skip_dilate=False):
     """Uses a blurring function, adaptive thresholding and dilation to expose the main features of an image."""
@@ -58,27 +40,15 @@ def find_corners_of_largest_polygon(img):
     contours = sorted(contours, key = cv2.contourArea, reverse=True) #sort by area descending
     polygon = contours[0] #largest image
 
+    #Gets the coordinates of the larges area on the picture
     bottom_right, _ = max(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
     top_left, _ = min(enumerate([pt[0][0] + pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
     bottom_left, _ = min(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
     top_right, _ = max(enumerate([pt[0][0] - pt[0][1] for pt in polygon]), key=operator.itemgetter(1))
 
+    #Returns an array of the coordinates
     return [polygon[top_left][0], polygon[top_right][0], polygon[bottom_right][0], polygon[bottom_left][0]]
 	
-def display_points(in_img, points, radius = 5, colour = (0,0,255)):
-    """Draws a circular points on an image"""
-    img = in_img.copy()
-
-    if len(colour) == 3:
-        if len(img.shape) ==2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        elif img.shape[2] == 1:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    for point in points:
-        img = cv2.circle(img, tuple(int(x) for x in point), radius, colour, -1)
-    show_image(img)
-    return img
-
 def distance_between(p1, p2):
     """Returns the scalar distance between twho points"""
     a = p2[0] - p1[0]
@@ -86,7 +56,10 @@ def distance_between(p1, p2):
     return np.sqrt((a**2)+(b**2))
 
 def crop_and_warp(img, crop_rect):
-    """"Crops and warps a rectangular section from an image into square of similar size"""
+    """"
+    Crops and warps a rectangular section from an image into square of similar size
+    Uses previously found rectangle coordinates
+    """
     top_left, top_right, bottom_right, bottom_left = crop_rect[0], crop_rect[1], crop_rect[2], crop_rect[3]
     
     src = np.array([top_left, top_right, bottom_right, bottom_left], dtype='float32')
@@ -264,102 +237,37 @@ def show_digits(digits, colour=255):
         rows.append(row)
     return (np.concatenate(rows, axis=1))
 
+#Where the picture is located
 PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/image1.jpg'
+
+#Reads the picture as a numpy array
 img = cv2.imread(PICTURE_PATH, cv2.IMREAD_GRAYSCALE)
+show_image(img)
+
+#First step, we make the image blurry and binary, to easyly find corners
 processed = pre_process_image(img)
-corners = find_corners_of_largest_polygon(processed)
-cropped = crop_and_warp(img, corners)
-squares = infer_grid(cropped)
-digits = get_digits(cropped, squares, 28)
-# for digit in digits:
-dig = show_digits(digits)
-show_image(dig)
-
-
-display_rects(cropped, squares)
-
-show_image(cropped)
-
-display_points(processed, corners)
-
 show_image(processed)
 
+#The we find corners
+corners = find_corners_of_largest_polygon(processed)
 
-# find the countours in image
+#Crop and Warp the image, so that the main grid is the only thing visible
+cropped = crop_and_warp(img, corners)
+show_image(cropped)
 
+# Marks a gridline to see where are numbers located
+squares = infer_grid(cropped)
+display_rects(cropped, squares)
 
-ext_contours,new_img  = cv2.findContours(processed.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-contours,new_img  = cv2.findContours(processed.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-processed = cv2.cvtColor(processed, cv2.COLOR_GRAY2BGR)
-
-
-
-all_contours = cv2.drawContours(processed.copy(), contours, -1, (255,0,0), 2)
-external_only = cv2.drawContours(processed.copy(), ext_contours, -1, (255, 0, 0), 2)
-plot_many_images([all_contours, external_only], ['All Contours', 'External Only'])
-
-
-
-#binary global threshold using a value of 127
-ret, threshold1 = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
-
-#binary adaptive threshold using 11 nearest neighbor pixels
-threshold2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-plot_many_images([threshold1, threshold2], ['Global', 'Adaptive'])
-
-tf.compat.v1.disable_eager_execution()
-x = tf.compat.v1.placeholder(tf.float32, shape=[0, 784])  # Placeholder for input
-y_ = tf.compat.v1.placeholder(tf.float32, shape=[0, 10])  # Placeholder for true labels (used in training)
-hidden_neurons = 16  # Number of neurons in the hidden layer, constant
-
-def weights(shape):
-	"""Weight initialisation with a random, slightly positive value to help prevent dead neurons."""
-	return tf.Variable(tf.random.normal(shape, stddev=0.1))
-def biases(shape):
-	"""Bias initialisation with a positive constant, helps to prevent dead neurons."""
-	return tf.Variable(tf.constant(0.1, shape=shape))
-
-# Hidden layer
-w_1 = weights([784, hidden_neurons])
-b_1 = biases([hidden_neurons])
-h_1 = tf.nn.sigmoid(tf.matmul(x, w_1) + b_1)  # Order of x and w_1 matters here purely syntactically
-
-# Output layer
-w_2 = weights([hidden_neurons, 10])
-b_2 = biases([10])
-y = tf.matmul(h_1, w_2) + b_2  # Note that we don't use sigmoid here because the next step uses softmax
-
-# Cross entropy cost function
-# More numerically stable to perform Softmax here instead of on the previous layer
-# c.f. https://www.tensorflow.org/get_started/mnist/beginners
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-
-# Gradient descent and backpropagation learning
-train_step = tf.compat.v1.train.GradientDescentOptimizer(0.5).minimize(cost)
-
-# Accuracy comparison/measurement function
-correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-def load_data(file_name):
-	"""Loads Python object from disk."""
-	with open(file_name, 'rb') as f:
-		data = pickle.load(f)
-	return data
-
-# Train the network
-model_path = 'D:/Code/PySem-FInal/PySem-Final/'
-ds = load_data(os.path.join('D:/Code/PySem-FInal/PySem-Final/neural_net', 'digit-basic'))  # Dataset
-# TensorFlow and tf.keras
-
-# Helper libraries
+# Extracts a cell if there is a number inside
+digits = get_digits(cropped, squares, 28)
+dig = show_digits(digits)
+show_image(dig)
 
 # Import MNIST dataset split into 60,000 for training and 10,000 for testing
 dset = keras.datasets.mnist
 (train_images, train_labels), (test_images, test_labels) = dset.load_data()
 # Insight into imported data
-num = 0
 
 # Categorize labels (not mandatory for our first simple network)
 train_labels_cat = np_utils.to_categorical(train_labels, 10)
@@ -370,26 +278,30 @@ test_images_orig = test_images
 train_images = train_images / 255
 test_images = test_images / 255
 
-
+# Defines the model
 model = keras.Sequential()
 model.add(Flatten(input_shape=(28, 28)))
 model.add(Dense(128, activation=tf.nn.relu))
 model.add(Dense(10, activation=tf.nn.softmax))
 
+# Compiles the model
 model.compile(loss='categorical_crossentropy',
     optimizer='adam',
     metrics=['accuracy'])
 
+# Trains the model
 model.fit(train_images, train_labels_cat, epochs=20)
 test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 print(test_loss,test_acc)
 
+# Reshaped previously made digit array (contains all the sudoku grid cell values)
 reshaped = np.reshape(digits,[-1,28,28])
+# Predicts all the values from grid
 predictions = model.predict(reshaped)
-
 
 puzzleArray = [[],[],[],[],[],[],[],[],[]]
 
+#Places all the values into a list of lists
 ini = 0
 for x in range(9):
     for y in range(9):
@@ -399,6 +311,8 @@ for x in range(9):
         else:
             puzzleArray[y].append(np.argmax(predictions[ini]))
             ini+=1
+
+#The puzzleArray converted to string, that will be passed further for solving
 puzzleString = ""
 for col in range(9):
     if col == 3 or col == 6:
@@ -412,44 +326,8 @@ for col in range(9):
         puzzleString += " "
     puzzleString += '\n'
 
-print(puzzleString)
-gridTest = """
-8 . . |. . . |. . . 
-. . 3 |6 . . |. . . 
-. 7 . |. 9 . |2 . . 
-------+------+------
-. 5 . |. . 7 |. . . 
-. . . |. 4 5 |7 . . 
-. . . |1 . . |. 3 . 
-------+------+------
-. . 1 |. . . |. 6 8 
-. . 8 |5 . . |. 1 . 
-. 9 . |. . . |4 . . 
-"""
+#Sudoku grid will be mapped like this
 
-# test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
-# print(test_loss,test_acc)
-
-#print(predictions)
-
-
-
-
-##m
-
-stop
-
-
-
-digits = '123456789'
-rows = 'ABCDEFGHI'
-cols = digits
-
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    return [a+b for a in A for b in B]
-
-# How a sudogu grid is represented
 # A1 A2 A3| A4 A5 A6| A7 A8 A9  
 # B1 B2 B3| B4 B5 B6| B7 B8 B9
 # C1 C2 C3| C4 C5 C6| C7 C8 C9
@@ -462,11 +340,22 @@ def cross(A, B):
 # H1 H2 H3| H4 H5 H6| H7 H8 H9
 # I1 I2 I3| I4 I5 I6| I7 I8 I9
 
-#List comprehension to create all identifiers for each cell in sudoku grid
+#So it will consist of 3 parts:
+# * Digits (values in cells)
+# * Rows
+# * Columns
 
+digits = '123456789'
+rows = 'ABCDEFGHI'
+cols = digits
+
+def cross(A, B):
+    "Cross product of elements in A and elements in B."
+    return [a+b for a in A for b in B]
+
+#List comprehension to create all identifiers for each cell in sudoku grid
 squares = cross(rows, cols)
 #print(squares)
-#print('\n')
 
 #Generates all 9 column units
 rowUnits = [cross(rows, c) for c in cols]
@@ -482,33 +371,17 @@ boxUnits = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123','456'
 
 #Combines all units together
 unitList = (rowUnits + columnUnits + boxUnits)
-print(unitList)
-print(len(unitList))
 
 #Makes a dictionary where the specific value 'C1' for example exists in all 3 units
 units = dict((s, [u for u in unitList if s in u]) for s in squares)
-print(units['C2']) 
+
 
 #Makes all squares in the related 3 units except 'C2' for example
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in squares)
-print(peers['C2'])
+
 
 #For now this will be the sudoku grid input -> Later, if there will be extra time, ill make a GUI for this
 #This is just easiest for the eyes, to understand how the grid is ploted
-gridTest = """
-8 . . |. . . |. . . 
-. . 3 |6 . . |. . . 
-. 7 . |. 9 . |2 . . 
-------+------+------
-. 5 . |. . 7 |. . . 
-. . . |. 4 5 |7 . . 
-. . . |1 . . |. 3 . 
-------+------+------
-. . 1 |. . . |. 6 8 
-. . 8 |5 . . |. 1 . 
-. 9 . |. . . |4 . . 
-"""
-
 
 def grid_Values(grid):
     "Convert grid into a dictionary of {square: char} with '.' or '0' for ampty cells"
@@ -516,9 +389,6 @@ def grid_Values(grid):
     chars = [c for c in grid if c in digits or c in '0.']
     assert len(chars) == 81
     return dict(zip(squares, chars))
-
-grid_values = grid_Values(gridTest)
-print(grid_values['A1'])
 
 #If a square has only one possible value, then eliminate that value from the squares peers
 #If a unit has only one possible place for a value, then put the value there
@@ -570,7 +440,7 @@ def eliminate(values, s, d):
 
 def display(values):
     "Display these values as a 2-D grid."
-    width = 1+max(len(values[s])for s in squares)
+    width = max(len(values[s])for s in squares) + 1
     line = '+'.join(['-'*(width*3)]*3)
     for r in rows:
         print(''.join(values[r+c].center(width)+('|'if c in '36' else '')for c in cols))
@@ -582,13 +452,14 @@ def solve(grid):
     return search(parse_grid(grid))
 
 def search(values):
-    "Using depth-first search and propogation, try all possible values"
+    "Using depth-first search and propagation, try all possible values."
     if values is False:
-        return False #Failed earlier
-    if all(len(values[s]) == 1 for s in squares):
-        return values #solved
-    n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
-    return some(search(assign(values.copy(), s, d))for d in values[s])
+        return False ## Failed earlier
+    if all(len(values[s]) == 1 for s in squares): 
+        return values ## Solved!
+    ## Chose the unfilled square s with the fewest possibilities
+    n,s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
+    return some(search(assign(values.copy(), s, d)) for d in values[s])
 
 def some(seq):
     "return some element of seq that is true"
@@ -596,5 +467,6 @@ def some(seq):
         if e: return e
     return False    
 
-display(solve(gridTest))
+#Magic happens here
+display(solve(puzzleString))
 
