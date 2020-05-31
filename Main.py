@@ -255,7 +255,7 @@ def show_digits(digits, colour=255):
         rows.append(row)
     return (np.concatenate(rows, axis=1))
 
-PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/sudoku-puzzle1.jpg'
+PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/image1.jpg'
 img = cv2.imread(PICTURE_PATH, cv2.IMREAD_GRAYSCALE)
 processed = pre_process_image(img)
 corners = find_corners_of_largest_polygon(processed)
@@ -387,26 +387,40 @@ model.fit(ds.train.images, ds.train.labels, epochs=10)
 resize = np.reshape(digits,(-1,28,28))                  # Calculate prediction for test data
 num = 0                  
 predictions = model.predict(resize)
-for x in range(9):
-    for y in range(9):
-        print(np.argmax(predictions[num]))
-        num+=1
-    print("newline")
+
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels_cat)
 # print(test_loss,test_acc)
 
-print(predictions)
+puzzleArray = [[],[],[],[],[],[],[],[],[]]
+
+    #Places all the values into a list of lists
+ini = 0
+for x in range(9):
+    for y in range(9):
+        if max(predictions[ini]) < 0.6:
+            puzzleArray[y].append(0)
+            ini+=1
+        else:
+            puzzleArray[y].append(np.argmax(predictions[ini]))
+            ini+=1
+
+    #The puzzleArray converted to string, that will be passed further for solving
+puzzleString = ""
+for col in range(9):
+    if col == 3 or col == 6:
+        puzzleString += "------+------+------\n"
     
+    for row in range(9):
+        if row == 3 or row ==6:
+            puzzleString += "|"
+            
+        puzzleString += (str)(puzzleArray[col][row])
+        puzzleString += " "
+    puzzleString += '\n'
 
 
 
-print(type(img))
-print(img.shape)
-print(img)
-
-
-stop
 
 
 
@@ -451,16 +465,15 @@ boxUnits = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123','456'
 
 #Combines all units together
 unitList = (rowUnits + columnUnits + boxUnits)
-print(unitList)
-print(len(unitList))
+
 
 #Makes a dictionary where the specific value 'C1' for example exists in all 3 units
 units = dict((s, [u for u in unitList if s in u]) for s in squares)
-print(units['C2']) 
+
 
 #Makes all squares in the related 3 units except 'C2' for example
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in squares)
-print(peers['C2'])
+
 
 #For now this will be the sudoku grid input -> Later, if there will be extra time, ill make a GUI for this
 #This is just easiest for the eyes, to understand how the grid is ploted
@@ -565,5 +578,5 @@ def some(seq):
         if e: return e
     return False    
 
-display(solve(gridTest))
+display(solve(puzzleString))
 
