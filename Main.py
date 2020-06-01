@@ -499,7 +499,7 @@ def grid_Values(grid):
     assert len(chars) == 81
     return dict(zip(squares, chars))
 
-grid_values = grid_Values(gridTest)
+grid_values = grid_Values(puzzleString)
 print(grid_values['A1'])
 
 #If a square has only one possible value, then eliminate that value from the squares peers
