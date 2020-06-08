@@ -1,8 +1,11 @@
 from Solver import Solver
 from Reader import Reader
+from GUI import Grid
 readingPart = Reader()
-puzzleString = readingPart.Read('D:/Code/PySem-FInal/PySem-Final/sudoku-puzzle1.jpg')
-print(puzzleString)
+puzzleArray = readingPart.Read('Untitled-1_2260717b.jpg')
+gamePart = Grid()
+gamePart.OpenSolver(puzzleArray)
+# print(puzzleString)
 
-solvingPart = Solver()
-solvingPart.Solve(str(puzzleString))
+# solvingPart = Solver()
+# solvingPart.Solve(str(puzzleString))

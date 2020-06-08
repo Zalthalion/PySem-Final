@@ -345,7 +345,7 @@ class Reader:
                 puzzleString += (str)(puzzleArray[col][row])
                 puzzleString += " "
             puzzleString += '\n'
-        return puzzleString
+        return puzzleArray
 
 
 
