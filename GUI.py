@@ -38,6 +38,10 @@ class Game:
             def sketch(self, val):
                 row, col = self.selected
                 self.cubes[row][col].set_temp(val)
+            
+            def text_objects(self, text, font):
+                textSurface = font.render(text, True, (255,255,255))
+                return textSurface, textSurface.get_rect()
 
             def draw(self, win):
                 # Draw Grid Lines
@@ -49,6 +53,25 @@ class Game:
                         thick = 1
                     pygame.draw.line(win, (0,0,0), (0, i*gap), (self.width, i*gap), thick)
                     pygame.draw.line(win, (0, 0, 0), (i * gap, 0), (i * gap, self.height), thick)
+
+
+                mouse = pygame.mouse.get_pos()
+                
+                
+                if 250+100 > mouse[0] > 250 and 560+25 > mouse[1] >560:
+                    pygame.draw.rect(win,(255, 0,0),(250,560,100,25))
+                else: 
+                    pygame.draw.rect(win,(0, 255,0),(250,560,100,25))
+
+                
+                samllText = pygame.font.Font("freesansbold.ttf", 20)
+                textSurf, textRect = text_objects("Give up", samllText)
+                textRect.center =( (250 +(100/2)), (450+(50/2)))
+                gameDisplay.blit(textSurf, textRect)
+
+
+
+
 
                 # Draw Cubes
                 for i in range(self.rows):
@@ -105,7 +128,7 @@ class Game:
 
             def draw(self, win):
                 fnt = pygame.font.SysFont("comicsans", 40)
-
+                
                 gap = self.width / 9
                 x = self.col * gap
                 y = self.row * gap
@@ -152,6 +175,7 @@ class Game:
         def main():
             win = pygame.display.set_mode((540,600))
             pygame.display.set_caption("Sudoku")
+            
             board = Grid(9, 9, 540, 540)
             key = None
             run = True
@@ -221,7 +245,36 @@ class Game:
 
                 redraw_window(win, board, play_time, strikes)
                 pygame.display.update()
-
-
+                
         main()
         pygame.quit()
+
+    class button():
+        def __init__(self, color, x,y,width,height, text=''):
+            self.color = color
+            self.x = x
+            self.y = y
+            self.width = width
+            self.height = height
+            self.text = text
+
+        def draw(self,win,outline=None):
+            #Call this method to draw the button on the screen
+            if outline:
+                pygame.draw.rect(win, outline, (self.x-2,self.y-2,self.width+4,self.height+4),0)
+                
+            pygame.draw.rect(win, self.color, (self.x,self.y,self.width,self.height),0)
+            
+            if self.text != '':
+                font = pygame.font.SysFont('comicsans', 60)
+                text = font.render(self.text, 1, (0,0,0))
+                win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+        def isOver(self, pos):
+            #Pos is the mouse position or a tuple of (x,y) coordinates
+            if pos[0] > self.x and pos[0] < self.x + self.width:
+                if pos[1] > self.y and pos[1] < self.y + self.height:
+                    return True
+                
+            return False
+      

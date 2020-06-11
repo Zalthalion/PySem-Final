@@ -32,7 +32,7 @@ class Solver:
 
         #Generates all 9 column units
         rowUnits = [cross(rows, c) for c in cols]
-        print(rowUnits)
+        # print(rowUnits)
 
         #Generates all 9 row units
         columnUnits = [cross(r , cols) for r in rows]
@@ -77,9 +77,7 @@ class Solver:
             assert len(chars) == 81
             return dict(zip(squares, chars))
 
-        grid_values = grid_Values(puzzleString)
-     
-
+        
         #If a square has only one possible value, then eliminate that value from the squares peers
         #If a unit has only one possible place for a value, then put the value there
 
@@ -142,16 +140,14 @@ class Solver:
                     ini+=1
 
 
+            # width = 1+max(len(values[s])for s in squares)
+            # line = '+'.join(['-'*(width*3)]*3)
+            # for r in rows:
+            #     print(''.join(values[r+c].center(width)+('|'if c in '36' else '')for c in cols))
+            #     if r in 'CF':
+            #         print(line)
+            # print()
 
-                        
-
-            width = 1+max(len(values[s])for s in squares)
-            line = '+'.join(['-'*(width*3)]*3)
-            for r in rows:
-                print(''.join(values[r+c].center(width)+('|'if c in '36' else '')for c in cols))
-                if r in 'CF':
-                    print(line)
-            print()
             return solveArray
 
         def solve(grid):

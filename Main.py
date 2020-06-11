@@ -18,8 +18,6 @@ for col in range(9):
     puzzleString += '\n'
 solveArray = solvingPart.Solve(str(puzzleString))
 
-print(solveArray)
-
 
 gamePart = Game()
 gamePart.StartTheGame(puzzleArray, solveArray)
