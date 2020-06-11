@@ -1,3 +1,5 @@
+#Libraries used in this work
+
 from cv2 import cv2     #pip install opencv-python      
 import numpy as np      #pip install numpy
 import operator
@@ -6,9 +8,11 @@ from tensorflow import keras
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
 from keras.utils import np_utils    #pip install keras
 import matplotlib.pyplot as plt
+
+#Class reader, that has one function defined and returns an array with sudoku grid
 class Reader:
     def Read(self, PICTURE_PATH):
-        # PICTURE_PATH = 'D:/Code/PySem-FInal/PySem-Final/image1.jpg'
+        
         def pre_process_image(img, skip_dilate=False):
             """Uses a blurring function, adaptive thresholding and dilation to expose the main features of an image."""
             # Gaussian blur with a kernal size (height, width) of 9.
@@ -332,19 +336,6 @@ class Reader:
                     puzzleArray[y].append(np.argmax(predictions[ini]))
                     ini+=1
 
-            #The puzzleArray converted to string, that will be passed further for solving
-        puzzleString = ""
-        for col in range(9):
-            if col == 3 or col == 6:
-                puzzleString += "------+------+------\n"
-            
-            for row in range(9):
-                if row == 3 or row ==6:
-                    puzzleString += "|"
-                    
-                puzzleString += (str)(puzzleArray[col][row])
-                puzzleString += " "
-            puzzleString += '\n'
         return puzzleArray
 
 

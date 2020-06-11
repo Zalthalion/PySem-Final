@@ -6,26 +6,13 @@ import time
 pygame.font.init()
 
 class Game:
-    def StartTheGame(self, board):
+    def StartTheGame(self, Board, solvedBoard):
         class Grid:
-        #def OpenSolver(self, board):
-        # To change the starting board change this
-            # board = [
-            #     [7, 8, 0, 4, 0, 0, 1, 2, 0],
-            #     [6, 0, 0, 0, 7, 5, 0, 0, 9],
-            #     [0, 0, 0, 6, 0, 1, 0, 7, 8],
-            #     [0, 0, 7, 0, 4, 0, 2, 6, 0],
-            #     [0, 0, 1, 0, 5, 0, 9, 3, 0],
-            #     [9, 0, 4, 0, 6, 0, 0, 0, 5],
-            #     [0, 7, 0, 3, 0, 0, 0, 1, 2],
-            #     [1, 2, 0, 0, 0, 7, 4, 0, 0],
-            #     [0, 4, 9, 2, 0, 6, 0, 0, 7]
-            # ]
-
+     
             def __init__(self, rows, cols, width, height):
                 self.rows = rows
                 self.cols = cols
-                self.cubes = [[Cube(board[i][j], i, j, width, height) for j in range(cols)] for i in range(rows)]
+                self.cubes = [[Cube(Board[i][j], i, j, width, height) for j in range(cols)] for i in range(rows)]
                 self.width = width
                 self.height = height
                 self.model = None
@@ -202,7 +189,16 @@ class Game:
                         if event.key == pygame.K_RETURN:
                             i, j = board.selected
                             if board.cubes[i][j].temp != 0:
-                                if board.place(board.cubes[i][j].temp):
+                                board.place(board.cubes[i][j].temp)
+                                print(type(board.cubes[i][j].value))
+                                print(type(solvedBoard[i][j]))
+                                print(board.cubes[i][j].value)
+
+                                print(solvedBoard[i][j] == board.cubes[i][j].value)
+
+                             
+
+                                if (str)(board.cubes[i][j].value) == solvedBoard[i][j]:
                                     print("Success")
                                 else:
                                     print("Wrong")

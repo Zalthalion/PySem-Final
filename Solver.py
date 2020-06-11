@@ -32,7 +32,7 @@ class Solver:
 
         #Generates all 9 column units
         rowUnits = [cross(rows, c) for c in cols]
-        #print(rowUnits)
+        print(rowUnits)
 
         #Generates all 9 row units
         columnUnits = [cross(r , cols) for r in rows]
@@ -40,7 +40,7 @@ class Solver:
 
         #Generates all 9 box units
         boxUnits = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123','456','789')]
-        #print(boxUnits)
+        # print(boxUnits)
 
         #Combines all units together
         unitList = (rowUnits + columnUnits + boxUnits)
@@ -78,7 +78,7 @@ class Solver:
             return dict(zip(squares, chars))
 
         grid_values = grid_Values(puzzleString)
-        print(grid_values['A1'])
+     
 
         #If a square has only one possible value, then eliminate that value from the squares peers
         #If a unit has only one possible place for a value, then put the value there
@@ -130,6 +130,21 @@ class Solver:
 
         def display(values):
             "Display these values as a 2-D grid."
+            
+            solveArray = [[],[],[],[],[],[],[],[],[]]
+
+                #Places all the values into a list of lists
+            ini = 1
+            
+            for x in range(9):
+                for y in range(9):
+                    solveArray[x].append(values[columnUnits[x][y]])
+                    ini+=1
+
+
+
+                        
+
             width = 1+max(len(values[s])for s in squares)
             line = '+'.join(['-'*(width*3)]*3)
             for r in rows:
@@ -137,6 +152,7 @@ class Solver:
                 if r in 'CF':
                     print(line)
             print()
+            return solveArray
 
         def solve(grid):
             return search(parse_grid(grid))
@@ -156,5 +172,5 @@ class Solver:
                 if e: return e
             return False    
 
-        display(solve(puzzleString))
+        return(display(solve(puzzleString)))
 
