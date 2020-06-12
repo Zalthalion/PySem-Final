@@ -4,11 +4,21 @@ import pygame
 from somethung import solve, valid
 import time
 pygame.font.init()
-
+#Global variable, that shows if the user has given up
+hasGivenUp = False
 class Game:
     def StartTheGame(self, Board, solvedBoard):
+        
+
+        def gaveUp():
+            """
+            Sets hasGivenUp to true
+            """
+            global hasGivenUp
+            hasGivenUp = True
+
+        
         class Grid:
-     
             def __init__(self, rows, cols, width, height):
                 self.rows = rows
                 self.cols = cols
@@ -39,9 +49,7 @@ class Game:
                 row, col = self.selected
                 self.cubes[row][col].set_temp(val)
             
-            def text_objects(self, text, font):
-                textSurface = font.render(text, True, (255,255,255))
-                return textSurface, textSurface.get_rect()
+            
 
             def draw(self, win):
                 # Draw Grid Lines
@@ -56,22 +64,23 @@ class Game:
 
 
                 mouse = pygame.mouse.get_pos()
-                
+                click = pygame.mouse.get_pressed()
                 
                 if 250+100 > mouse[0] > 250 and 560+25 > mouse[1] >560:
                     pygame.draw.rect(win,(255, 0,0),(250,560,100,25))
+                    if click[0] == 1:
+                       gaveUp()
                 else: 
                     pygame.draw.rect(win,(0, 255,0),(250,560,100,25))
 
-                
+                def text_objects(text, font):
+                    textSurface = font.render(text, True, (0,0,0))
+                    return textSurface, textSurface.get_rect()
+
                 samllText = pygame.font.Font("freesansbold.ttf", 20)
                 textSurf, textRect = text_objects("Give up", samllText)
-                textRect.center =( (250 +(100/2)), (450+(50/2)))
-                gameDisplay.blit(textSurf, textRect)
-
-
-
-
+                textRect.center =( (250 +(100/2)), (560+(24/2)))
+                win.blit(textSurf, textRect)
 
                 # Draw Cubes
                 for i in range(self.rows):
@@ -162,7 +171,11 @@ class Game:
             # Draw grid and board
             board.draw(win)
 
+       
 
+        def checkForGivingUp():
+            global hasGivenUp
+            return  hasGivenUp
         def format_time(secs):
             sec = secs%60
             minute = secs//60
@@ -175,7 +188,6 @@ class Game:
         def main():
             win = pygame.display.set_mode((540,600))
             pygame.display.set_caption("Sudoku")
-            
             board = Grid(9, 9, 540, 540)
             key = None
             run = True
@@ -184,7 +196,12 @@ class Game:
             while run:
 
                 play_time = round(time.time() - start)
-
+                # If the user has given up, then we fill the sudoku grid
+                if checkForGivingUp() == True:
+                    for x in range(9):
+                        for y in range(9):
+                            if board.cubes[x][y].value == 0:
+                                board.cubes[x][y].value = solvedBoard[x][y]    
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         run = False
@@ -214,14 +231,7 @@ class Game:
                             i, j = board.selected
                             if board.cubes[i][j].temp != 0:
                                 board.place(board.cubes[i][j].temp)
-                                print(type(board.cubes[i][j].value))
-                                print(type(solvedBoard[i][j]))
-                                print(board.cubes[i][j].value)
-
-                                print(solvedBoard[i][j] == board.cubes[i][j].value)
-
-                             
-
+                            
                                 if (str)(board.cubes[i][j].value) == solvedBoard[i][j]:
                                     print("Success")
                                 else:
@@ -231,7 +241,7 @@ class Game:
 
                                 if board.is_finished():
                                     print("Game over")
-                                    run = False
+                                    # run = False
 
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         pos = pygame.mouse.get_pos()
@@ -245,36 +255,9 @@ class Game:
 
                 redraw_window(win, board, play_time, strikes)
                 pygame.display.update()
-                
+       
+
         main()
         pygame.quit()
 
-    class button():
-        def __init__(self, color, x,y,width,height, text=''):
-            self.color = color
-            self.x = x
-            self.y = y
-            self.width = width
-            self.height = height
-            self.text = text
-
-        def draw(self,win,outline=None):
-            #Call this method to draw the button on the screen
-            if outline:
-                pygame.draw.rect(win, outline, (self.x-2,self.y-2,self.width+4,self.height+4),0)
-                
-            pygame.draw.rect(win, self.color, (self.x,self.y,self.width,self.height),0)
-            
-            if self.text != '':
-                font = pygame.font.SysFont('comicsans', 60)
-                text = font.render(self.text, 1, (0,0,0))
-                win.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
-
-        def isOver(self, pos):
-            #Pos is the mouse position or a tuple of (x,y) coordinates
-            if pos[0] > self.x and pos[0] < self.x + self.width:
-                if pos[1] > self.y and pos[1] < self.y + self.height:
-                    return True
-                
-            return False
-      
+    

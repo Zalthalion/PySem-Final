@@ -1,5 +1,3 @@
-#Libraries used in this work
-
 from cv2 import cv2     #pip install opencv-python      
 import numpy as np      #pip install numpy
 import operator
@@ -7,11 +5,13 @@ import tensorflow as tf     #pip install tensorflow
 from tensorflow import keras
 from tensorflow.keras.layers import Flatten, Dense, Dropout, Convolution2D, MaxPooling2D
 from keras.utils import np_utils    #pip install keras
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt     #pip install matplotlib        
+import pickle
+import os
 
 #Class reader, that has one function defined and returns an array with sudoku grid
 class Reader:
-    def Read(self, PICTURE_PATH):
+    def Read(self, PICTURE_PATH, preview = True):
         
         def pre_process_image(img, skip_dilate=False):
             """Uses a blurring function, adaptive thresholding and dilation to expose the main features of an image."""
@@ -261,9 +261,6 @@ class Reader:
         dig = show_digits(digits)
         show_image(dig)
 
-        import tensorflow as tf
-        import pickle
-        import os
         tf.compat.v1.disable_eager_execution()
         x = tf.compat.v1.placeholder(tf.float32, shape=[0, 784])  # Placeholder for input
         y = tf.compat.v1.placeholder(tf.float32, shape=[0, 10])  # Placeholder for true labels (used in training)
@@ -285,16 +282,6 @@ class Reader:
         w_2 = weights([hidden_neurons, 10])
         b_2 = biases([10])
         y = tf.matmul(h_1, w_2) + b_2  # Note that we don't use sigmoid here because the next step uses softmax
-
-        # Cross entropy cost function
-        # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-
-        # Gradient descent and backpropagation learning
-        # train_step = tf.compat.v1.train.GradientDescentOptimizer(0.5).minimize(cost)
-
-        # Accuracy comparison/measurement function
-        # correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-        #accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
         def load_data(file_name):
             """Loads Python object from disk."""
