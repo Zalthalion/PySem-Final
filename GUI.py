@@ -1,7 +1,7 @@
 # GUI.py
 # RUN THIS FILE
 import pygame
-from somethung import valid
+from somethung import solve, valid
 import time
 pygame.font.init()
 #Global variable, that shows if the user has given up
